@@ -36,18 +36,18 @@ def test_google_search():
     if temperature <= 19:
         moisture.click()
         # Almond
-        Almond_products = driver.find_elements(By.XPATH, "//p[contains(text(),'Almond')]")
-        min_price_Almond = 9999
+        Almond_products = driver.find_elements(By.XPATH, "//p[contains(translate(text(),'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'),'almond')]")
+        min_price_Almond = int(1e9)
         for product in Almond_products:
             price_element = product.find_element(By.XPATH, "./following-sibling::p")
             product_price = extract_digits(price_element.text)
             min_price_Almond = min(min_price_Almond, product_price)
         print(f"Minimum Price for Almond: {min_price_Almond}")
         # Aloe
-        Aloe_products = driver.find_elements(By.XPATH, "//p[contains(text(),'Aloe')]")
-        min_price_Aloe = 9999
+        Aloe_products = driver.find_elements(By.XPATH, "//p[contains(translate(text(),'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'),'aloe')]")
+        min_price_Aloe = int(1e9)
         for product in Aloe_products:
-            price_element = product.find_element(By.XPATH, "following-sibling::p")
+            price_element = product.find_element(By.XPATH, "./following-sibling::p")
             product_price = extract_digits(price_element.text)
             min_price_Aloe = min(min_price_Aloe, product_price)
         print(f"Minimum Price for Aloe: {min_price_Aloe}")
@@ -60,24 +60,20 @@ def test_google_search():
         sunscreen.click()
         # SPF-50
         spf50_products = driver.find_elements(By.XPATH, "//p[contains(text(),'SPF-50')]")
-        min_price_spf50 = 999
+        min_price_spf50 = int(1e9)  # Utiliser une grande valeur comme point de départ
         for product in spf50_products:
             price_element = product.find_element(By.XPATH, "./following-sibling::p")
-            price_text = price_element.text.replace("Price: Rs. ", "")
-            price_digits = ''.join(filter(lambda x: x.isdigit() or x == '.', price_text))
-            price = int(price_digits)
-            min_price_spf50 = min(min_price_spf50, price)
-        print(f"Minimum Price for SPF-50: Rs. {min_price_spf50}")
+            product_price = extract_digits(price_element.text)
+            min_price_spf50 = min(min_price_spf50, product_price)
+        print(f"Minimum Price for SPF-50: {min_price_spf50}")
         # SPF-30
         spf30_products = driver.find_elements(By.XPATH, "//p[contains(text(),'SPF-30')]")
-        min_price_spf30 = 999
+        min_price_spf30 = int(1e9)  # Utiliser une grande valeur comme point de départ
         for product in spf30_products:
-            price_element = product.find_element(By.XPATH, "following-sibling::p")
-            price_text = price_element.text.replace("Price: Rs. ", "")
-            price_digits = ''.join(filter(lambda x: x.isdigit() or x == '.', price_text))
-            price = int(price_digits)
-            min_price_spf30 = min(min_price_spf30, price)
-        print(f"Minimum Price for SPF-30: Rs. {min_price_spf30}")
+            price_element = product.find_element(By.XPATH, "./following-sibling::p")
+            product_price = extract_digits(price_element.text)
+            min_price_spf30 = min(min_price_spf30, product_price)
+        print(f"Minimum Price for SPF-30: {min_price_spf30}")
 
         driver.find_element(By.XPATH, f"//p[contains(text(), '{str(min_price_spf30)}')]//following-sibling::button").click()
         driver.find_element(By.XPATH, f"//p[contains(text(), '{str(min_price_spf50)}')]//following-sibling::button").click()
@@ -119,7 +115,7 @@ def fill_payment_form(driver):
     )
     submit_button.click()
 
-    time.sleep(5)
+    time.sleep(20)
     driver.quit()
 
 # Define the typeslowly function
@@ -128,4 +124,3 @@ def typeslowly(loc, text):
         loc.send_keys(i)
         time.sleep(0.5)
 
-test_google_search()
