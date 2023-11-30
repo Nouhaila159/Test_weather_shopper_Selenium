@@ -1,0 +1,198 @@
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+import time
+import datetime
+
+# logging.basicConfig(level=logging.INFO)
+x = datetime.datetime.now()
+
+def test_google_search():
+    # Instancier l'objet driver
+    driver = webdriver.Edge()
+    driver.maximize_window()
+
+    # Accéder à weathershopper.pythonanywhere.com
+    driver.get("https://weathershopper.pythonanywhere.com/")
+
+    # Vérifier l'URL de la page
+    assert driver.current_url == "https://weathershopper.pythonanywhere.com/", "Ce n'est pas la bonne URL"
+
+    # Prendre une capture d'écran de la page
+    driver.save_screenshot(f'screenshots/screenshot-{x.year}-{x.month}-{x.day}{x.hour}{x.minute}_{x.second}.png')
+
+    # Mettre à jour l'assertion pour le titre
+    assert driver.title == "Current Temperature", "Mauvais titre de la page"
+
+    moisture = driver.find_element(By.XPATH, "/html/body/div/div[3]/div[1]/a/button")
+    sunscreen = driver.find_element(By.XPATH, "/html/body/div/div[3]/div[2]/a/button")
+    time.sleep(5)
+
+    temperature_str = driver.find_element(By.ID, "temperature").text.replace(' ℃', '')
+    # Extrait uniquement les chiffres de la chaîne
+    temperature = int(''.join(filter(str.isdigit, temperature_str)))
+
+    
+    if temperature <= 19:
+        moisture.click()
+        sunscreen.click()
+        # Sélectionnez les produits Almond
+        Almond_products = driver.find_elements(By.XPATH, "//p[contains(text(),'Almond')]")
+
+        min_price_Almond = 999
+        # Parcourir les produits Almond pour trouver le prix minimum
+        for product in Almond_products:
+            price_element = product.find_element(By.XPATH, "./following-sibling::p")
+            price_value = float(re.sub(r'Price: Rs\.? ', '', price_text))
+            price_digits = ''.join(filter(lambda x: x.isdigit() or x == '.', price_text))
+            price = int(price_digits)
+            min_price_Almond = min(min_price_Almond, price)
+
+        print(f"Minimum Price for Almond: Rs. {min_price_Almond}")
+        
+        # Sélectionnez les produits  Aloe
+        Aloe_products = driver.find_elements(By.XPATH, "//p[contains(text(),'Aloe')]")
+
+        # Initialiser le prix minimum avec la valeur maximale possible
+
+        min_price_Aloe = 999
+        # Parcourir les produits SPF 30 pour trouver le prix minimum
+        for product in Aloe_products:
+            price_element = product.find_element(By.XPATH, "following-sibling::p")
+            price_value = float(re.sub(r'Price: Rs\.? ', '', price_text))
+            price_digits = ''.join(filter(lambda x: x.isdigit() or x == '.', price_text))
+            price = int(price_digits)
+            min_price_Aloe = min(min_price_Aloe, price)
+
+        print(f"Minimum Price for Aloe: Rs. {min_price_Aloe}")
+        # Cliquez sur le bouton "Add" pour le produit SPF-30 avec le prix minimum
+        driver.find_element(By.XPATH, f"//p[contains(text(), '{str(min_price_Aloe)}')]//following-sibling::button").click()
+        
+        # Cliquez sur le bouton "Add" pour le produit SPF-50 avec le prix minimum
+        driver.find_element(By.XPATH, f"//p[contains(text(), '{str(min_price_Almond)}')]//following-sibling::button").click()
+
+        cart = driver.find_element(By.XPATH, "/html/body/nav/ul/button")
+        cart.click()
+
+        driver.find_element(By.XPATH, "/html/body/div[1]/div[3]/form/button").click()
+
+        driver.switch_to.frame(0)
+        formulaire = [
+            driver.find_element(By.ID, "email"),
+            driver.find_element(By.ID, "card_number"),
+            driver.find_element(By.ID, "cc-exp"),
+            driver.find_element(By.ID, "cc-csc")
+        ]
+
+        creditcard = ["n.danouni@mundiapolis.ma", "4242424242424242", "1130", "123"]
+
+        def typeslowly(loc, text):
+            for i in text:
+                loc.send_keys(i)
+                time.sleep(0.3)
+
+        for i in range(4):
+            typeslowly(formulaire[i], creditcard[i])
+
+        # Attendre que l'élément avec l'ID "billing-zip" soit présent
+        zip_element = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.ID, 'billing-zip'))
+        )
+
+        # Une fois que l'élément est présent, envoyez les touches
+        zip_element.send_keys("26100")
+
+        # Attendre que l'élément avec l'ID "submitButton" soit présent
+        submit_button = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, '//*[@id="submitButton"]'))
+        )
+
+        # Une fois que le bouton est présent, cliquez dessus
+        submit_button.click()
+
+        # Ajoutez d'autres actions nécessaires après le paiement
+
+        time.sleep(10)
+        driver.quit()
+    elif temperature >= 34:
+        sunscreen.click()
+            # Sélectionnez les produits SPF 50
+        spf50_products = driver.find_elements(By.XPATH, "//p[contains(text(),'SPF-50')]")
+
+        min_price_spf50 = 999
+        # Parcourir les produits SPF 50 pour trouver le prix minimum
+        for product in spf50_products:
+            price_element = product.find_element(By.XPATH, "./following-sibling::p")
+            price_text = price_element.text.replace("Price: Rs. ", "")
+            price_digits = ''.join(filter(lambda x: x.isdigit() or x == '.', price_text))
+            price = int(price_digits)
+            min_price_spf50 = min(min_price_spf50, price)
+
+        print(f"Minimum Price for SPF-50: Rs. {min_price_spf50}")
+        
+        # Sélectionnez les produits SPF 30
+        spf30_products = driver.find_elements(By.XPATH, "//p[contains(text(),'SPF-30')]")
+
+        # Initialiser le prix minimum avec la valeur maximale possible
+
+        min_price_spf30 = 999
+        # Parcourir les produits SPF 30 pour trouver le prix minimum
+        for product in spf30_products:
+            price_element = product.find_element(By.XPATH, "following-sibling::p")
+            price_text = price_element.text.replace("Price: Rs. ", "")
+            price_digits = ''.join(filter(lambda x: x.isdigit() or x == '.', price_text))
+            price = int(price_digits)
+            min_price_spf30 = min(min_price_spf30, price)
+
+        print(f"Minimum Price for SPF-30: Rs. {min_price_spf30}")
+        # Cliquez sur le bouton "Add" pour le produit SPF-30 avec le prix minimum
+        driver.find_element(By.XPATH, f"//p[contains(text(), '{str(min_price_spf30)}')]//following-sibling::button").click()
+        
+        # Cliquez sur le bouton "Add" pour le produit SPF-50 avec le prix minimum
+        driver.find_element(By.XPATH, f"//p[contains(text(), '{str(min_price_spf50)}')]//following-sibling::button").click()
+
+        cart = driver.find_element(By.XPATH, "/html/body/nav/ul/button")
+        cart.click()
+
+        driver.find_element(By.XPATH, "/html/body/div[1]/div[3]/form/button").click()
+
+        driver.switch_to.frame(0)
+        formulaire = [
+            driver.find_element(By.ID, "email"),
+            driver.find_element(By.ID, "card_number"),
+            driver.find_element(By.ID, "cc-exp"),
+            driver.find_element(By.ID, "cc-csc")
+        ]
+
+        creditcard = ["n.danouni@mundiapolis.ma", "4242424242424242", "1130", "123"]
+
+        def typeslowly(loc, text):
+            for i in text:
+                loc.send_keys(i)
+                time.sleep(0.3)
+
+        for i in range(4):
+            typeslowly(formulaire[i], creditcard[i])
+
+        # Attendre que l'élément avec l'ID "billing-zip" soit présent
+        zip_element = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.ID, 'billing-zip'))
+        )
+
+        # Une fois que l'élément est présent, envoyez les touches
+        zip_element.send_keys("26100")
+
+        # Attendre que l'élément avec l'ID "submitButton" soit présent
+        submit_button = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, '//*[@id="submitButton"]'))
+        )
+
+        # Une fois que le bouton est présent, cliquez dessus
+        submit_button.click()
+
+        # Ajoutez d'autres actions nécessaires après le paiement
+
+        time.sleep(10)
+        driver.quit()
+
